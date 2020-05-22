@@ -191,12 +191,13 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
   datos <<- data
 
-  names(datos)[names(datos) == name_sup] <<- "p_sup"
-  names(datos)[names(datos) == name_frente] <<- "largo_frente"
-  names(datos)[names(datos) == name_forma] <<- "forma"
-  names(datos)[names(datos) == name_ubicacion_cuadra] <<- "ubicacion_cuadra"
-  names(datos)[names(datos) == name_tipodevalor] <<- "p_tipodevalor"
-  names(datos)[names(datos) == name_sit_juridica] <<- "p_sj"
+  if (f_sup == T){names(datos)[names(datos) == name_sup] <<- "p_sup"}
+  if (f_frente == T) {names(datos)[names(datos) == name_frente] <<- "largo_frente"}
+  if (f_forma == T) {names(datos)[names(datos) == name_forma] <<- "forma"}
+  if (f_ubicacion_cuadra == T) {names(datos)[names(datos) == name_ubicacion_cuadra] <<- "ubicacion_cuadra"}
+  if (f_tipodevalor == T) {names(datos)[names(datos) == name_tipodevalor] <<- "p_tipodevalor"}
+  if (f_sit_juridica == T) {names(datos)[names(datos) == name_sit_juridica] <<- "p_sj"}
+
   names(datos)[names(datos) == name_valor_actualizado] <<- "valor_actualizado"
 
 
@@ -211,7 +212,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
   if (f_frente == T) {
 
-    form <- paste (form, "largo_frente +", sep = " ")}
+    form <- paste (form, "log(largo_frente) +", sep = " ")}
 
 
   if (f_forma == T) {
@@ -534,6 +535,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   return(resultados)
 
 }
+
 
 
 
