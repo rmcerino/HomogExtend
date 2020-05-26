@@ -181,7 +181,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
                         f_sup, f_frente, f_forma, f_ubicacion_cuadra, f_tipodevalor,
                         f_sit_juridica, f_otras_variables, otras_variables,
 
-                        dist_lw, p_valor, parcelas) {
+                        dist_lw, p_valor, parcelario, coef_parcelas) {
 
   # library(sf)
   # library(tidyverse)
@@ -190,6 +190,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   # library(spatialreg)
 
   datos <<- data
+  parcelas <<- parcelario
 
   if (f_sup == T){names(datos)[names(datos) == name_sup] <<- "p_sup"}
   if (f_frente == T) {names(datos)[names(datos) == name_frente] <<- "largo_frente"}
@@ -197,8 +198,13 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   if (f_ubicacion_cuadra == T) {names(datos)[names(datos) == name_ubicacion_cuadra] <<- "ubicacion_cuadra"}
   if (f_tipodevalor == T) {names(datos)[names(datos) == name_tipodevalor] <<- "p_tipodevalor"}
   if (f_sit_juridica == T) {names(datos)[names(datos) == name_sit_juridica] <<- "p_sj"}
+  if (f_sup == T){names(parcelas)[names(parcelas) == name_sup] <<- "p_sup"}
+  if (f_frente == T) {names(parcelas)[names(parcelas) == name_frente] <<- "largo_frente"}
 
   names(datos)[names(datos) == name_valor_actualizado] <<- "valor_actualizado"
+
+  if (coef_parcelas == T) {names(parcelas)[names(parcelas) == name_forma] <<- "forma"}
+  if (coef_parcelas == T) {names(parcelas)[names(parcelas) == name_ubicacion_cuadra] <<- "ubicacion_cuadra"}
 
 
 
@@ -311,6 +317,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
   }
 
+  print (summary(regresion))
 
   b_sup <- subset(b_total, vble == "log(p_sup)")
   b_sup <- b_sup[,c("vble","a.total", "Pr...z..")]
@@ -422,7 +429,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   matriz_beta <<- beta
 
 
-  vbles <- data.frame(id = as.numeric(1:length(datos$forma)))
+  vbles <- data.frame(id = as.numeric(1:(dim(datos)[1])))
   if (is.na(vlookup("forma1", b_sig, 2))==F) {
     vbles$forma <- as.numeric(as.character(datos$forma))}
 
@@ -481,61 +488,68 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
   resultados_muestra <- list("RESUMEN DE COEFICIENTES EN LA MUESTRA",coeficientes_muestra, "RESUMEN DE VALORES HOMOGENEIZADOS",vh)
 
+  if (coef_parcelas == FALSE){
 
-  vbles2 <- data.frame(id = as.numeric(1:length(parcelas$forma)))
-  if (is.na(vlookup("forma1", b_sig, 2))==F) {
-    vbles2$forma <- as.numeric(as.character(parcelas$forma))}
+    print("No se calculan los coeficientes de homogeneización en las parcelas")
 
-  if (is.na(vlookup("ubicacion_cuadra1", b_sig, 2))==F) {
-    vbles2$ubicacion_cuadra1 <- ifelse (as.numeric(as.character(parcelas$ubicacion_cuadra))==1,1,0)}
+    return(resultados_muestra)
 
-  if (is.na(vlookup("ubicacion_cuadra2", b_sig, 2))==F) {
-    vbles2$ubicacion_cuadra2 <- ifelse (as.numeric(as.character(parcelas$ubicacion_cuadra))==2,1,0)}
-
-  if (is.na(vlookup("ubicacion_cuadra3", b_sig, 2))==F) {
-    vbles2$ubicacion_cuadra3 <- ifelse (as.numeric(as.character(parcelas$ubicacion_cuadra))==3,1,0)}
-
-  if (is.na(vlookup("p_tipodevalor1", b_sig, 2))==F) {
-    vbles2$p_tipodevalor <- 0}
-
-  if (is.na(vlookup("p_sj1", b_sig, 2))==F) {
-    vbles2$p_sj <- 0}
-
-  largo2 <- as.numeric(length(vbles2$id))
-  vbles2$id <- NULL
-
-  vbles_parcelas <<- vbles2
+  } else {
 
 
-  for(i in 1:largo2){
-    a <- t(as.matrix(as.numeric(vbles2 [i,])))
-    parcelas$expon[i] <- a %*% beta}
+    vbles2 <- data.frame(id = as.numeric(1:(dim(parcelas)[1])))
+    if (is.na(vlookup("forma1", b_sig, 2))==F) {
+      vbles2$forma <- as.numeric(as.character(parcelas$forma))}
+
+    if (is.na(vlookup("ubicacion_cuadra1", b_sig, 2))==F) {
+      vbles2$ubicacion_cuadra1 <- ifelse (as.numeric(as.character(parcelas$ubicacion_cuadra))==1,1,0)}
+
+    if (is.na(vlookup("ubicacion_cuadra2", b_sig, 2))==F) {
+      vbles2$ubicacion_cuadra2 <- ifelse (as.numeric(as.character(parcelas$ubicacion_cuadra))==2,1,0)}
+
+    if (is.na(vlookup("ubicacion_cuadra3", b_sig, 2))==F) {
+      vbles2$ubicacion_cuadra3 <- ifelse (as.numeric(as.character(parcelas$ubicacion_cuadra))==3,1,0)}
+
+    if (is.na(vlookup("p_tipodevalor1", b_sig, 2))==F) {
+      vbles2$p_tipodevalor <- 0}
+
+    if (is.na(vlookup("p_sj1", b_sig, 2))==F) {
+      vbles2$p_sj <- 0}
+
+    largo2 <- as.numeric(length(vbles2$id))
+    vbles2$id <- NULL
+
+    vbles_parcelas <<- vbles2
 
 
-  parcelas$coef <- ((parcelas$p_sup/mediana_sup) ^ ifelse(length(b_sup$b)!=0, b_sup$b, 0)) *
-    ((parcelas$largo_frente/mediana_frente) ^ ifelse(length(b_frente$b)!=0, b_frente$b, 0)) *
-    (exp(parcelas$expon))
+    for(i in 1:largo2){
+      a <- t(as.matrix(as.numeric(vbles2 [i,])))
+      parcelas$expon[i] <- a %*% beta}
 
 
-  parcelas$coef <- ifelse (parcelas$coef < 0.2, 0.2,
-                           ifelse (parcelas$coef > 1.5, 1.5,
-                                   parcelas$coef))
-
-  parcelas$coef <<- parcelas$coef
+    parcelas$coef <- ((parcelas$p_sup/mediana_sup) ^ ifelse(length(b_sup$b)!=0, b_sup$b, 0)) *
+      ((parcelas$largo_frente/mediana_frente) ^ ifelse(length(b_frente$b)!=0, b_frente$b, 0)) *
+      (exp(parcelas$expon))
 
 
-  save(parcelas, file = "Coefcientes/parcelas_coef.Rda")
+    parcelas$coef <- ifelse (parcelas$coef < 0.2, 0.2,
+                             ifelse (parcelas$coef > 1.5, 1.5,
+                                     parcelas$coef))
 
-  coeficientes_parcelas <- summary(parcelas$coef)
+    parcelas$coef <<- parcelas$coef
 
-  reaultados_parcelas <- list("RESUMEN COEFICIENTES PARCELAS", coeficientes_parcelas)
 
-  resultados <- list(resultados_muestra, reaultados_parcelas)
+    save(parcelas, file = "Coefcientes/parcelas_coef.Rda")
 
-  return(resultados)
+    coeficientes_parcelas <- summary(parcelas$coef)
 
-}
+    reaultados_parcelas <- list("RESUMEN COEFICIENTES PARCELAS", coeficientes_parcelas)
 
+    resultados <- list(resultados_muestra, reaultados_parcelas)
+
+    return(resultados)
+
+  }}
 
 
 
