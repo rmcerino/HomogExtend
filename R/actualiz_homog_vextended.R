@@ -22,10 +22,6 @@ elasticidades <- function(data, cuantiles, name_vut, name_tc, name_valor_m2,
   datos$quant <<- datos$quant
 
 
-  cuantiles = 1
-  f_otras_variables = T
-
-
   if(cuantiles == 1){
 
     form <- "log(valor_m2) ~ log(tc)"
