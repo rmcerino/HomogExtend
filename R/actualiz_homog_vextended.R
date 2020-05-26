@@ -147,7 +147,7 @@ elasticidades <- function(data, cuantiles, name_vut, name_tc, name_valor_m2,
   elasticidad$quant <<- paste("Q", elasticidad$q, sep="")
   elasticidad$q <<- NULL
 
-  dir.create("Elasticidad ")
+  dir.create("Elasticidad")
 
   save(elasticidad, file="Elasticidad/elasticidad.Rda")
 
