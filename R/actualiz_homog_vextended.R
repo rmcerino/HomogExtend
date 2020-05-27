@@ -206,7 +206,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
   if (f_sup == T) {
 
-    form <- paste ("log(valor_actualizado) ~ log(p_sup) +")
+    form <- paste ("log(valor_actualizado) ~ log(p_sup)")
 
   } else {
 
@@ -214,29 +214,29 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
   if (f_frente == T) {
 
-    form <- paste (form, "log(largo_frente) +", sep = " ")}
+    form <- paste (form, "+ log(largo_frente)", sep = " ")}
 
 
   if (f_forma == T) {
 
-    form <- paste (form, "forma +", sep = " ")}
+    form <- paste (form, "+ forma", sep = " ")}
 
 
   if (f_ubicacion_cuadra == T) {
 
-    form <- paste (form, "ubicacion_cuadra +", sep = " ")}
+    form <- paste (form, "+ ubicacion_cuadra", sep = " ")}
 
   if (f_tipodevalor == T) {
 
-    form <- paste (form, "p_tipodevalor +", sep = " ")}
+    form <- paste (form, "+ p_tipodevalor", sep = " ")}
 
   if (f_sit_juridica == T) {
 
-    form <- paste (form, "p_sj +", sep = " ")}
+    form <- paste (form, "+ p_sj", sep = " ")}
 
   if (f_otras_variables == T) {
 
-    form <- paste (form, otras_variables , sep = " ")}
+    form <- paste (form, otras_variables , sep = " + ")}
 
 
   form <- as.formula(form)
