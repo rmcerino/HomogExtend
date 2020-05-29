@@ -1,8 +1,9 @@
-elasticidades <- function(data, cuantiles, name_vut, name_tc, name_valor_m2,
-                          dist_lw, f_otras_variables, otras_variables){
+elasticidades <- function(data, parcelario, cuantiles, name_vut, name_tc,
+                          name_valor_m2, dist_lw, f_otras_variables,
+                          otras_variables){
 
 
-
+  # library(nngeo)
   # library(DescTools)
   # library(tibble)
   # library(sf)
@@ -12,13 +13,17 @@ elasticidades <- function(data, cuantiles, name_vut, name_tc, name_valor_m2,
 
 
   datos <<- data
+  parcelas <<- parcelario
 
-  names(datos)[names(datos) == name_vut] <<- "vut_vigente"
+  names(parcelas)[names(parcelas) == name_vut] <<- "vut_vigente"
   names(datos)[names(datos) == name_tc] <<- "tc"
   names(datos)[names(datos) == name_valor_m2] <<- "valor_m2"
 
 
-  datos$quant <- DescTools::CutQ(datos$vut_vigente, breaks = quantile(datos$vut_vigente,(seq(0, 1, by = 1/cuantiles))))
+  parcelas$quant <- DescTools::CutQ(parcelas$vut_vigente, breaks = quantile(parcelas$vut_vigente,(seq(0, 1, by = 1/cuantiles))))
+  parcelas$quant <<- parcelas$quant
+
+  datos <- st_join (datos, parcelas[,c("quant")], st_nn , k=1 )
   datos$quant <<- datos$quant
 
 
@@ -26,9 +31,9 @@ elasticidades <- function(data, cuantiles, name_vut, name_tc, name_valor_m2,
 
     form <- "log(valor_m2) ~ log(tc)"
 
-    } else {
-      form <- "log(valor_m2) ~ log(tc) + log(tc):quant"
-      }
+  } else {
+    form <- "log(valor_m2) ~ log(tc) + log(tc):quant"
+  }
 
 
   if(f_otras_variables == T) {
@@ -155,6 +160,7 @@ elasticidades <- function(data, cuantiles, name_vut, name_tc, name_valor_m2,
   print(resultado)
 
 }
+
 
 valor_actualizado <- function(tc_act, datos, elasticidad){
 

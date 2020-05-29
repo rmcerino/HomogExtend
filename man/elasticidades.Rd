@@ -9,13 +9,14 @@ Paso 1 de 3:
 Estimación de las elasticidades del tipo de cambio, de acuerdo a una determinada cantidad de cuantiles. Que serán luego utilizadas para la actualización de valores muestrales.
 }
 \usage{
-elasticidades(data, cuantiles, name_vut, name_tc, name_valor_m2, dist_lw, f_otras_variables, otras_variables)
+elasticidades(data, parcelario, cuantiles, name_vut, name_tc, name_valor_m2, dist_lw, f_otras_variables, otras_variables)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{data}{Base de datos muestrales (tiene que ser tipo sf)}
+  \item{parcelario}{Base parcelaria de datos de predicción (debe tener el vut vigente)}
   \item{cuantiles}{Número de cuantiles que se desean estimar (mayor o igual a 1)}
-  \item{name_vut}{String - debe indicarse entre comillas (""). Nombre de la variable que reprsenta el último vut vigente existente}
+  \item{name_vut}{String - debe indicarse entre comillas (""). Nombre de la variable que reprsenta el último vut vigente existente en la BASE PARCELARIA}
   \item{name_tc}{String - debe indicarse entre comillas (""). Nombre de la variable tipo de cambio}
   \item{name_valor_m2}{String - debe indicarse entre comillas (""). Nombre de la variable muestral valor por metro cuadrado (sin homogeneizar ni actualizar)}
   \item{dist_lw}{Distancia para generar la matriz W de vecinos}
