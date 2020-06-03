@@ -13,9 +13,9 @@ control_omi(datos, base_tc, umbral)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{
-%%     ~~Describe \code{x} here~~
-}
+  \item{datos}{Base de datos OMI}
+  \item{base_tc}{Base de tipo de cambio}
+  \item{umbral}{Umbral}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
