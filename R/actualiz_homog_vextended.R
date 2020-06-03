@@ -3,13 +3,13 @@ elasticidades <- function(data, parcelario, cuantiles, name_vut, name_tc,
                           otras_variables){
 
 
-  # library(nngeo)
-  # library(DescTools)
-  # library(tibble)
-  # library(sf)
-  # library(spatialreg)
-  # library(expss)
-  # library(spdep)
+  library(nngeo)
+  library(DescTools)
+  library(tibble)
+  library(sf)
+  library(spatialreg)
+  library(expss)
+  library(spdep)
 
 
   datos <<- data
@@ -185,11 +185,11 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
                         dist_lw, p_valor, parcelario, coef_parcelas) {
 
-  # library(sf)
-  # library(tidyverse)
-  # library(spdep)
-  # library(expss)
-  # library(spatialreg)
+  library(sf)
+  library(tidyverse)
+  library(spdep)
+  library(expss)
+  library(spatialreg)
 
   datos <<- data
   parcelas <<- parcelario
@@ -552,6 +552,141 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
     return(resultados)
 
   }}
+
+
+control_omi <- function(datos, base_tc, umbral){
+
+  if(umbral > 0.5){stop("Umbral muy alto - Debe ser menor a 0.5")}
+
+  library(sf)
+  library(dplyr)
+  library(spdep)
+  library(spatstat)
+  library(RColorBrewer)
+  library(mapview)
+
+  datos <- subset(datos, TipoDeInmueble==0) #solo baldios
+  datos$id <- as.numeric(1:dim(datos)[1])
+  aux <- datos
+  aux <- st_drop_geometry(aux)
+
+  datos$condicion <- NA
+
+  datos_nasup <- subset(datos, is.na(SuperficieLoteUrbano)==TRUE & TipoDeValor != 11)
+  if(dim(datos_nasup)[1] != 0){
+    datos_nasup$condicion <- "Superficie NA"
+    datos_nasup <- datos_nasup[,c("id", "condicion")]
+  }
+  datos <- subset(datos, is.na(SuperficieLoteUrbano)==FALSE | TipoDeValor == 11)
+
+  datos_navalor <- subset(datos, is.na(Valor)==TRUE & TipoDeValor != 11)
+  if(dim(datos_navalor)[1] != 0){
+    datos_navalor$condicion <- "Valor NA"
+    datos_navalor <- datos_navalor[,c("id", "condicion")]
+  }
+  datos <- subset(datos, is.na(Valor)==FALSE | TipoDeValor == 11)
+
+
+  datos_nafecha <- subset(datos, is.na(FechaValor)==TRUE)
+  if(dim(datos_nafecha)[1] != 0){
+    datos_nafecha$condicion <- "FechaValor NA"
+    datos_nafecha <- datos_nafecha[,c("id", "condicion")]
+  }
+
+  datos <- subset(datos, is.na(FechaValor)==FALSE)
+
+  tc <- base_tc
+  tc$FechaValor <- tc$fecha2
+  datos = left_join(datos, tc[,c("tc","FechaValor")], by="FechaValor") #; datos$tc.x = NULL; datos$tc.y = NULL
+
+  summary(datos$tc)
+
+  datos_natc <- subset(datos, is.na(tc)==T)
+  if(dim(datos_natc)[1] != 0){
+    datos_natc$condicion <- "FechaValor error"
+    datos_natc <- datos_natc[,c("id", "condicion")]
+  }
+
+  datos <- subset(datos, is.na(tc)==F)
+
+  datos$Valor_pesos <- ifelse(datos$TipoDeMoneda==1, datos$Valor*datos$tc, datos$Valor)
+
+  datos$valor_m2 <- datos$Valor_pesos / datos$SuperficieLoteUrbano
+
+  datos$valor_m2 <-  ifelse(datos$TipoDeValor == 11,
+                            ifelse(datos$TipoDeMoneda==1, datos$ValorM2*datos$tc, datos$ValorM2),
+                            datos$valor_m2)
+
+
+  # mismo momento del tiempo
+  tc_ref <- 44.93
+  datos$var_tc <- (tc_ref/datos$tc) - 1
+  datos$vm2 <- (1 + datos$var_tc) * datos$valor_m2
+
+  # Promedio vm2 vecinos a 500m
+  cord <- st_coordinates(datos)
+  d <- dnearneigh(cord, 0, 500)
+  dlist <- nbdists(d, coordinates(cord))
+  idlist <- lapply(dlist, function(x) 1/x)
+  m <- nb2mat(d, glist = idlist, style = "W", zero.policy = TRUE)
+
+  valor = matrix(datos$vm2)
+  dim(m) ; dim(valor)
+  lag = m%*%valor
+  lag = as.data.frame(lag) ; lag$lag = lag$V1
+  datos$lag = lag$lag
+
+  # Definicion de umbrales y condicion
+  # umbral <- 0.3
+  datos$min_umbral <- datos$lag * (1 / (1 + umbral))
+  datos$max_umbral <- datos$lag * (1 + umbral)
+
+  datos$condicion = ifelse(datos$vm2 > datos$min_umbral & datos$vm2 < datos$max_umbral,
+                           "todo ok", "atipico")
+
+  datos$vecino_prox = nndist(st_coordinates(datos), k=1)
+
+  datos$condicion = ifelse(datos$vecino_prox > 500, "sin vecinos", datos$condicion)
+  table(datos$condicion)
+
+  datos <- datos[,c("id","condicion")]
+
+  ## Union
+  aux_1 <- rbind(datos, datos_nafecha, datos_nasup, datos_natc, datos_navalor)
+  datos_baldios <- left_join(aux_1, aux, by="id")
+  datos_baldios$id <- NULL
+  datos_baldios <<- datos_baldios
+
+  ## Base para mapear
+  datos_mapa <- datos_baldios
+  datos_mapa$cond_mapa <- ifelse(datos_baldios$condicion == "atipico", "atipico",
+                                 ifelse(datos_baldios$condicion == "sin vecinos", "sin vecinos",
+                                        ifelse(datos_baldios$condicion == "todo ok", "todo ok", "error/NA")))
+
+  datos_mapa <- datos_mapa[,c("cond_mapa", "condicion", "Observaciones", "Nomenclatura", "TipoDeValor", "Fuente",
+                              "TipoDeInmueble","SituacionJuridica", "Valor", "SuperficieLoteUrbano",
+                              "Frente", "Forma", "Topografia", "UbicacionCuadra", "FechaCarga", "Usuario",
+                              "FechaValor", "TipoDeMoneda", "ValorM2")]
+
+  col<-c("#FFFF00", "#000000","#969696","#66ff26")
+  # gris #969696 # amarillo #FFFF00 # verde  #66ff26 # negro #000000
+  mapa <- mapview::mapview(datos_mapa,  zcol="cond_mapa", col.regions = col, gl =TRUE,
+                           alpha.region = 1 , lwd = 1, alpha = 0.3)
+  mapa <<- mapa
+
+  ## Guardar archivos
+  dir.create("Resultados Control OMI")
+  mapshot(mapa, url = paste0(getwd(), "/Resultados Control OMI/map.html"))
+  st_write(datos_baldios, "Resultados Control OMI/datos_baldios.gpkg", delete_dsn = T, delete_layer = T)
+
+  print("La base y el mapa han sido guardados en una carpeta 'Resultados Control OMI'")
+
+  return(table(datos_baldios$condicion))
+
+}
+
+
+
 
 
 
