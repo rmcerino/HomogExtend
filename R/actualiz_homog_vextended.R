@@ -559,7 +559,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   }}
 
 
-control_omi <- function(datos, base_tc, umbral){
+control_omi <- function(datos, base_tc, umbral, dist_lw){
 
   if(umbral > 0.5){stop("Umbral muy alto - Debe ser menor a 0.5")}
 
@@ -628,9 +628,9 @@ control_omi <- function(datos, base_tc, umbral){
   datos$var_tc <- (tc_ref/datos$tc) - 1
   datos$vm2 <- (1 + datos$var_tc) * datos$valor_m2
 
-  # Promedio vm2 vecinos a 500m
+  # Promedio vm2 vecinos a dist_lw metros
   cord <- st_coordinates(datos)
-  d <- dnearneigh(cord, 0, 500)
+  d <- dnearneigh(cord, 0, dist_lw)
   dlist <- nbdists(d, coordinates(cord))
   idlist <- lapply(dlist, function(x) 1/x)
   m <- nb2mat(d, glist = idlist, style = "W", zero.policy = TRUE)
@@ -651,7 +651,7 @@ control_omi <- function(datos, base_tc, umbral){
 
   datos$vecino_prox = nndist(st_coordinates(datos), k=1)
 
-  datos$condicion = ifelse(datos$vecino_prox > 500, "sin vecinos", datos$condicion)
+  datos$condicion = ifelse(datos$vecino_prox > dist_lw, "sin vecinos", datos$condicion)
   table(datos$condicion)
 
   datos <- datos[,c("id","condicion")]

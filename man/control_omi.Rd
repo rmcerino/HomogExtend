@@ -9,13 +9,15 @@ Control de observaciones atipicas en el OMI
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-control_omi(datos, base_tc, umbral)
+control_omi(datos, base_tc, umbral, dist_lw)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datos}{Base de datos directa del OMI}
   \item{base_tc}{Base Tipo de Cambio}
   \item{umbral}{Cuanto mas alto que los vecinos se permite que sea un valor: valores de 0 a 0.5}
+  \item{dist_lw}{Distancia en la matriz de vecinos}
+
 
 }
 \details{
