@@ -534,9 +534,14 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
       (exp(parcelas$expon))
 
 
+    parcelas$coef <- ifelse (parcelas$ubicacion_cuadra == "4", 0.2, parcelas$coef)
+
+
     parcelas$coef <- ifelse (parcelas$coef < 0.2, 0.2,
                              ifelse (parcelas$coef > 1.5, 1.5,
                                      parcelas$coef))
+
+    parcelas$coef <- round(parcelas$coef/0.05, digits = 0) * 0.05
 
     parcelas$coef <<- parcelas$coef
 
@@ -684,5 +689,66 @@ control_omi <- function(datos, base_tc, umbral){
   return(table(datos_baldios$condicion))
 
 }
+
+control_vh <- function(data, umbral, n_valor_homogeneo, dist_lw){
+
+  library(sf)
+  library(dplyr)
+  library(spdep)
+  library(spatstat)
+  library(RColorBrewer)
+  library(mapview)
+
+  if(umbral > 0.5){stop("Umbral muy alto - Debe ser menor a 0.5")}
+
+  data <- datos
+  names(datos)[names(datos)== n_valor_homogeneo] <- "m2_coef"
+
+  # Promedio vm2 vecinos a dist_lw metros de distancia
+  cord <- st_coordinates(datos)
+  d <- dnearneigh(cord, 0, dist_lw)
+  dlist <- nbdists(d, coordinates(cord))
+  idlist <- lapply(dlist, function(x) 1/x)
+  m <- nb2mat(d, glist = idlist, style = "W", zero.policy = TRUE)
+
+  valor = matrix(datos$m2_coef)
+  dim(m) ; dim(valor)
+  lag = m%*%valor
+  lag = as.data.frame(lag) ; lag$lag = lag$V1
+  datos$lag = lag$lag
+
+  # Definicion de umbrales y condicion
+  # umbral <- 0.3
+  datos$min_umbral <- datos$lag * (1 / (1 + umbral))
+  datos$max_umbral <- datos$lag * (1 + umbral)
+
+  datos$condicion = ifelse(datos$m2_coef > datos$min_umbral & datos$m2_coef < datos$max_umbral,
+                           "todo ok", "atipico")
+
+  datos$vecino_prox = nndist(st_coordinates(datos), k=1)
+
+  datos$condicion = ifelse(datos$vecino_prox > dist_lw, "sin vecinos", datos$condicion)
+
+  mapa <- mapview(datos,  zcol="condicion", gl =TRUE,
+                  alpha.region = 1 , lwd = 1, alpha = 0.3)
+
+  mapa <<- mapa
+  names(datos)
+
+  datos$vecino_prox <- NULL
+
+  names(datos)[names(datos)== "lag"] <- "m2_entorno"
+
+  ## Guardar archivos
+  dir.create("Resultados Control VH")
+  mapshot(mapa, url = paste0(getwd(), "/Resultados Control VH/map.html"))
+  st_write(datos, "Resultados Control VH/datos_control_vh.gpkg", delete_dsn = T, delete_layer = T)
+
+  print("La base y el mapa han sido guardados en una carpeta 'Resultados Control VH'")
+
+  return(table(datos$condicion))
+
+}
+
 
 
