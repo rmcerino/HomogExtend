@@ -2,7 +2,7 @@
 \alias{control_omi}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Control de observaciones atípicas en el OMI
+Control de observaciones atipicas en el OMI
 %%  ~~function to do ... ~~
 }
 \description{
@@ -15,8 +15,8 @@ control_omi(datos, base_tc, umbral)
 \arguments{
   \item{datos}{Base de datos directa del OMI}
   \item{base_tc}{Base Tipo de Cambio}
-  \item{umbral}{Cuánto más alto que los vecinos se permite que sea un valor: valores de 0 a 0.5}
-  
+  \item{umbral}{Cuanto mas alto que los vecinos se permite que sea un valor: valores de 0 a 0.5}
+
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
