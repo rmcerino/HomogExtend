@@ -5,7 +5,7 @@
 Control de valores homogeneizados atipicos
 }
 \description{
-Señala aquellos valores que pueden ser atipicos en su entorno. Es necesario revisarlos para decidir si eliminarlos o no.
+Indica aquellos valores que pueden ser atipicos en su entorno. Es necesario revisarlos para decidir si eliminarlos o no.
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
