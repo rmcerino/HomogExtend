@@ -667,11 +667,11 @@ control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hast
 
   #fecha_desde = "2020-05-20"
   desde1 <- as.character(fecha_desde)
-  desde <- paste(desde1, " 00:00:01", sep = "")
+  desde <- paste0(desde1, " 00:00:01")
   desde <- as.POSIXct(desde)
 
   hasta1 <- as.character(fecha_hasta)
-  hasta <- paste(hasta1, " 23:59:59", sep = "")
+  hasta <- paste0(hasta1, " 23:59:59")
   hasta <- as.POSIXct(hasta)
 
 
