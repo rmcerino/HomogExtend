@@ -664,10 +664,10 @@ control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hast
 
   ## Fechas
 
-  desde = paste(fecha_desde, " 00:00:01") # Esto lo pongo porque la fecha está en formato POSIXct y hay que completar el campo con hora, minutos y segundos. Por defecto lo fijamos al inicio del primer día y al final del último.
+  desde <- paste(fecha_desde, " 00:00:01", sep = "")
   desde <- as.POSIXct(desde)
 
-  hasta = paste(fecha_hasta, " 23:59:59")
+  hasta <- paste(fecha_hasta, " 23:59:59", sep = "")
   hasta <- as.POSIXct(hasta)
 
 
