@@ -559,7 +559,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   }}
 
 
-control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hasta){
+control_omi <- function(datos, base_tc, umbral, dist_lw,  fecha_desde, fecha_hasta){
 
   if(umbral > 0.5){stop("Umbral muy alto - Debe ser menor a 0.5")}
 
@@ -570,24 +570,27 @@ control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hast
   library(RColorBrewer)
   library(mapview)
 
+
   datos <- subset(datos, TipoDeInmueble==0) #solo baldios
   datos$id <- as.numeric(1:dim(datos)[1])
   aux <- datos
   aux <- st_drop_geometry(aux)
 
   datos$condicion <- NA
+  datos$lag <- NA
+  datos$vm2 <- NA
 
   datos_nasup <- subset(datos, is.na(SuperficieLoteUrbano)==TRUE & TipoDeValor != 11)
   if(dim(datos_nasup)[1] != 0){
     datos_nasup$condicion <- "Superficie NA"
-    datos_nasup <- datos_nasup[,c("id", "condicion")]
+    datos_nasup <- datos_nasup[,c("id", "condicion", "lag", "vm2")]
   }
   datos <- subset(datos, is.na(SuperficieLoteUrbano)==FALSE | TipoDeValor == 11)
 
   datos_navalor <- subset(datos, is.na(Valor)==TRUE & TipoDeValor != 11)
   if(dim(datos_navalor)[1] != 0){
     datos_navalor$condicion <- "Valor NA"
-    datos_navalor <- datos_navalor[,c("id", "condicion")]
+    datos_navalor <- datos_navalor[,c("id", "condicion", "lag", "vm2")]
   }
   datos <- subset(datos, is.na(Valor)==FALSE | TipoDeValor == 11)
 
@@ -595,7 +598,7 @@ control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hast
   datos_nafecha <- subset(datos, is.na(FechaValor)==TRUE)
   if(dim(datos_nafecha)[1] != 0){
     datos_nafecha$condicion <- "FechaValor NA"
-    datos_nafecha <- datos_nafecha[,c("id", "condicion")]
+    datos_nafecha <- datos_nafecha[,c("id", "condicion", "lag", "vm2")]
   }
 
   datos <- subset(datos, is.na(FechaValor)==FALSE)
@@ -609,7 +612,7 @@ control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hast
   datos_natc <- subset(datos, is.na(tc)==T)
   if(dim(datos_natc)[1] != 0){
     datos_natc$condicion <- "FechaValor error"
-    datos_natc <- datos_natc[,c("id", "condicion")]
+    datos_natc <- datos_natc[,c("id", "condicion", "lag", "vm2")]
   }
 
   datos <- subset(datos, is.na(tc)==F)
@@ -626,9 +629,11 @@ control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hast
   # mismo momento del tiempo
   tc_ref <- 44.93
   datos$var_tc <- (tc_ref/datos$tc) - 1
+
+  options(scipen=999)
   datos$vm2 <- (1 + datos$var_tc) * datos$valor_m2
 
-  # Promedio vm2 vecinos a dist_lw metros
+  # Promedio vm2 vecinos a 500m
   cord <- st_coordinates(datos)
   d <- dnearneigh(cord, 0, dist_lw)
   dlist <- nbdists(d, coordinates(cord))
@@ -639,6 +644,8 @@ control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hast
   dim(m) ; dim(valor)
   lag = m%*%valor
   lag = as.data.frame(lag) ; lag$lag = lag$V1
+
+  options(scipen=999)
   datos$lag = lag$lag
 
   # Definicion de umbrales y condicion
@@ -654,16 +661,18 @@ control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hast
   datos$condicion = ifelse(datos$vecino_prox > dist_lw, "sin vecinos", datos$condicion)
   table(datos$condicion)
 
-  datos <- datos[,c("id","condicion")]
+  datos <- datos[,c("id","condicion", "lag", "vm2")]
 
   ## Union
   aux_1 <- rbind(datos, datos_nafecha, datos_nasup, datos_natc, datos_navalor)
   datos_baldios <- left_join(aux_1, aux, by="id")
   datos_baldios$id <- NULL
+
+  names(datos_baldios)[names(datos_baldios)=="lag"] <- "valor_entorno"
+
   datos_baldios <<- datos_baldios
 
   ## Fechas
-
 
   #fecha_desde = "2020-05-20"
   desde1 <- as.character(fecha_desde)
@@ -689,17 +698,17 @@ control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hast
                                      datos_baldios$Fecha > hasta, "todo ok",
                                    as.character(datos_baldios$condicion))
 
-
   ## Base para mapear
   datos_mapa <- datos_baldios
   datos_mapa$cond_mapa <- ifelse(datos_baldios$condicion == "atipico", "atipico",
                                  ifelse(datos_baldios$condicion == "sin vecinos", "sin vecinos",
-                                        ifelse(datos_baldios$condicion == "todo ok", "todo ok", "error/NA")))
+                                        ifelse(datos_baldios$condicion == "todo ok", "todo ok",
+                                               "error/NA")))
 
   datos_mapa <- datos_mapa[,c("cond_mapa", "condicion", "Observaciones", "Nomenclatura", "TipoDeValor", "Fuente",
                               "TipoDeInmueble","SituacionJuridica", "Valor", "SuperficieLoteUrbano",
                               "Frente", "Forma", "Topografia", "UbicacionCuadra", "FechaCarga", "Usuario",
-                              "FechaValor", "TipoDeMoneda", "ValorM2")]
+                              "FechaValor", "TipoDeMoneda", "ValorM2", "valor_entorno", "vm2")]
 
   col<-c("#FFFF00", "#000000","#969696","#66ff26")
   # gris #969696 # amarillo #FFFF00 # verde  #66ff26 # negro #000000
@@ -717,6 +726,7 @@ control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hast
   return(table(datos_baldios$condicion))
 
 }
+
 
 control_vh <- function(data, umbral, n_valor_homogeneo, dist_lw){
 
