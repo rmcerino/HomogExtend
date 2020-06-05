@@ -559,7 +559,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   }}
 
 
-control_omi <- function(datos, base_tc, umbral, dist_lw){
+control_omi <- function(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hasta){
 
   if(umbral > 0.5){stop("Umbral muy alto - Debe ser menor a 0.5")}
 
@@ -661,6 +661,30 @@ control_omi <- function(datos, base_tc, umbral, dist_lw){
   datos_baldios <- left_join(aux_1, aux, by="id")
   datos_baldios$id <- NULL
   datos_baldios <<- datos_baldios
+
+  ## Fechas
+
+  desde = paste(fecha_desde, " 00:00:01") # Esto lo pongo porque la fecha está en formato POSIXct y hay que completar el campo con hora, minutos y segundos. Por defecto lo fijamos al inicio del primer día y al final del último.
+  desde <- as.POSIXct(desde)
+
+  hasta = paste(fecha_hasta, " 23:59:59")
+  hasta <- as.POSIXct(hasta)
+
+
+  datos_baldios$FechaCarga <- as.character(datos_baldios$FechaCarga)
+  datos_baldios$FechaUltimaActualizacion <- as.character(datos_baldios$FechaUltimaActualizacion)
+
+  datos_baldios$Fecha <- ifelse(is.na(datos_baldios$FechaUltimaActualizacion)==T,
+                                datos_baldios$FechaCarga, datos_baldios$FechaUltimaActualizacion)
+
+  datos_baldios$Fecha <- as.POSIXct(datos_baldios$Fecha)
+  datos_baldios$FechaCarga <- as.POSIXct(datos_baldios$FechaCarga)
+  datos_baldios$FechaUltimaActualizacion <- as.POSIXct(datos_baldios$FechaUltimaActualizacion)
+
+  datos_baldios$condicion = ifelse(datos_baldios$Fecha < desde |
+                                     datos_baldios$Fecha > hasta, "todo ok",
+                                   as.character(datos_baldios$condicion))
+
 
   ## Base para mapear
   datos_mapa <- datos_baldios

@@ -9,7 +9,7 @@ Control de observaciones atipicas en el OMI
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-control_omi(datos, base_tc, umbral, dist_lw)
+control_omi(datos, base_tc, umbral, dist_lw, fecha_desde, fecha_hasta)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,6 +17,8 @@ control_omi(datos, base_tc, umbral, dist_lw)
   \item{base_tc}{Base Tipo de Cambio}
   \item{umbral}{Cuanto mas alto que los vecinos se permite que sea un valor: valores de 0 a 0.5}
   \item{dist_lw}{Distancia en la matriz de vecinos}
+  \item{fecha_desde}{String, debe ser escrito entre comillas "aaaa-mm-dd". Fecha a partir de la cual se va a evaluar la base}
+  \item{fecha_hasta}{String, debe ser escrito entre comillas "aaaa-mm-dd". Hasta que fecha se va a evaluar la base}
 
 
 }
