@@ -603,7 +603,9 @@ control_omi <- function(datos, base_tc, umbral, dist_lw,  fecha_desde, fecha_has
 
   datos <- subset(datos, is.na(FechaValor)==FALSE)
 
+  base_tc$fecha2 <- paste(base_tc$mes, "/", base_tc$anio, sep="")
   tc <- base_tc
+
   tc$FechaValor <- tc$fecha2
   datos = left_join(datos, tc[,c("tc","FechaValor")], by="FechaValor") #; datos$tc.x = NULL; datos$tc.y = NULL
 
