@@ -604,6 +604,10 @@ control_omi <- function(datos, base_tc, umbral, dist_lw,  fecha_desde, fecha_has
   datos <- subset(datos, is.na(FechaValor)==FALSE)
 
   base_tc$fecha2 <- paste(base_tc$mes, "/", base_tc$anio, sep="")
+
+  base_tc$fecha2 <- ifelse(nchar(base_tc$fecha2)==6,
+                           paste("0", base_tc$fecha2, sep=""), base_tc$fecha2)
+
   tc <- base_tc
 
   tc$FechaValor <- tc$fecha2
