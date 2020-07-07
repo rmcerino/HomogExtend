@@ -611,6 +611,9 @@ control_omi <- function(datos, base_tc, umbral, dist_lw,  fecha_desde, fecha_has
   tc <- base_tc
 
   tc$FechaValor <- tc$fecha2
+  tc$FechaValor <- as.factor(tc$FechaValor)
+  datos$FechaValor <- as.factor(datos$FechaValor)
+
   datos = left_join(datos, tc[,c("tc","FechaValor")], by="FechaValor") #; datos$tc.x = NULL; datos$tc.y = NULL
 
   summary(datos$tc)
