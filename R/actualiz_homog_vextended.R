@@ -609,7 +609,6 @@ control_omi <- function(datos, base_tc, umbral, dist_lw,  fecha_desde, fecha_has
                            paste("0", base_tc$fecha2, sep=""), base_tc$fecha2)
 
   tc <- base_tc
-
   tc$FechaValor <- tc$fecha2
   tc$FechaValor <- as.factor(tc$FechaValor)
   datos$FechaValor <- as.factor(datos$FechaValor)
