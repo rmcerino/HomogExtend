@@ -486,6 +486,24 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
   vh <- summary(datos$valor_actualizado/datos$coef)
 
+  library(stringr)
+  form_coef <- c(paste("Para parcelas pasillo -> coef = 0.2"),
+                 paste(
+                   "Caso contrario -> coef = (sup/", mediana_sup, ")^", round(b_sup$b, 3),
+                   " * (frente/", mediana_frente , ")^" , round(b_frente$b, 3),
+                   " * exp(forma^" , round(b_sig[1,2],3) , " + esquina^" , round(b_sig[2,2], 3),
+                   " + interno^" , round(b_sig[3,2],3), " + salida_calles^" , round(b_sig[4,2],3), ")",
+                   sep=""),
+                 paste("Esto aplica para las siguientes localidades:"),
+                 paste(list(levels(datos$localidad))[[1]]
+                 ))
+
+  form_coef <<- form_coef
+
+  save(form_coef, file="Coefcientes/form_coef.Rda")
+  write.table(form_coef, file="Coefcientes/form_coef.txt")
+
+
   save(datos, file = "Coefcientes/datos_coef.Rda")
 
   resultados_muestra <- list("RESUMEN DE COEFICIENTES EN LA MUESTRA",coeficientes_muestra, "RESUMEN DE VALORES HOMOGENEIZADOS",vh)
