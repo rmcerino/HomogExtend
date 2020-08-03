@@ -5,7 +5,7 @@
 Cálculo de elasticidades del tipo de cambio
 }
 \description{
-Paso 1 de 3:
+Paso 1 de 4:
 Estimación de las elasticidades del tipo de cambio, de acuerdo a una determinada cantidad de cuantiles. Que serán luego utilizadas para la actualización de valores muestrales.
 }
 \usage{
@@ -52,7 +52,9 @@ Primero: elasticidades()
 
 Segundo: valor_actualizado()
 
-Tercero: func_homog()
+Tercero: parametros_homog()
+
+Cuarto: func_homog()
 
 }
 

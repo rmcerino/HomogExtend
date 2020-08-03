@@ -5,7 +5,7 @@
 Actualización de valores muestrales a un determinado valor de tipo de cambio.
 }
 \description{
-Paso 2 de 3:
+Paso 2 de 4:
 
 Con las elasticidades y la base de datos obtenidas en el paso 1, se procede a la actualización de valores muestrales a un determinado valor de tipo de cambio.
 }
@@ -34,9 +34,12 @@ valor_actualizado = Es el valor en pesos por metro cuadrado llevado al tipo de c
 Este es el segundo paso para actualizar y homogeneizar la base muestral.
 
 Primero: elasticidades()
-Segundo: valor_actualizado()
-Tercero: func_homog()
 
+Segundo: valor_actualizado()
+
+Tercero: parametros_homog()
+
+Cuarto: func_homog()
 }
 
 

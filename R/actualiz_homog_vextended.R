@@ -177,13 +177,13 @@ valor_actualizado <- function(tc_act, datos, elasticidad){
 
 }
 
-func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_cuadra,
-                        name_tipodevalor, name_sit_juridica, name_valor_actualizado,
+parametros_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_cuadra,
+                              name_tipodevalor, name_sit_juridica, name_valor_actualizado,
 
-                        f_sup, f_frente, f_forma, f_ubicacion_cuadra, f_tipodevalor,
-                        f_sit_juridica, f_otras_variables, otras_variables,
+                              f_sup, f_frente, f_forma, f_ubicacion_cuadra, f_tipodevalor,
+                              f_sit_juridica, f_otras_variables, otras_variables,
 
-                        dist_lw, p_valor, parcelario, coef_parcelas) {
+                              dist_lw, p_valor) {
 
   library(sf)
   library(tidyverse)
@@ -192,7 +192,6 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   library(spatialreg)
 
   datos <<- data
-  parcelas <<- parcelario
 
   if (f_sup == T){names(datos)[names(datos) == name_sup] <<- "p_sup"}
   if (f_frente == T) {names(datos)[names(datos) == name_frente] <<- "largo_frente"}
@@ -200,15 +199,8 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   if (f_ubicacion_cuadra == T) {names(datos)[names(datos) == name_ubicacion_cuadra] <<- "ubicacion_cuadra"}
   if (f_tipodevalor == T) {names(datos)[names(datos) == name_tipodevalor] <<- "p_tipodevalor"}
   if (f_sit_juridica == T) {names(datos)[names(datos) == name_sit_juridica] <<- "p_sj"}
-  if (f_sup == T){names(parcelas)[names(parcelas) == name_sup] <<- "p_sup"}
-  if (f_frente == T) {names(parcelas)[names(parcelas) == name_frente] <<- "largo_frente"}
 
   names(datos)[names(datos) == name_valor_actualizado] <<- "valor_actualizado"
-
-  if (coef_parcelas == T) {names(parcelas)[names(parcelas) == name_forma] <<- "forma"}
-  if (coef_parcelas == T) {names(parcelas)[names(parcelas) == name_ubicacion_cuadra] <<- "ubicacion_cuadra"}
-
-
 
   if (f_sup == T) {
 
@@ -278,9 +270,9 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
                      ifelse((moran_lm$RLMerr$p.value < 0.1) & (moran_lm$RLMlag$p.value > 0.1),
                             "modelo SEM", "modelo SAR"))
 
-    print(paste("Se estiman los parámetros para la función de homogeneización mediante un", modelo, sep=" "))
+    print(paste("Se estiman los parametros para la funcion de homogeneizacion mediante un", modelo, sep=" "))
 
-    # Regresión espacial
+    # Regresion espacial
     if (modelo == "modelo SAC"){
       regresion <- sacsarlm(ols, data = datos, listw = lw, zero.policy = T, na.action = na.omit)
     }
@@ -321,23 +313,29 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
   print (summary(regresion))
 
-  b_sup <- subset(b_total, vble == "log(p_sup)")
-  b_sup <- b_sup[,c("vble","a.total", "Pr...z..")]
-  names(b_sup)[names(b_sup)=="a.total"] <- "b"
-  names(b_sup)[names(b_sup)=="Pr...z.."] <- "p"
-  b_sup$b <- ifelse(b_sup$p <= p_valor, b_sup$b, 0)
+  if (f_sup == T) {
+    b_sup <- subset(b_total, vble == "log(p_sup)")
+    b_sup <- b_sup[,c("vble","a.total", "Pr...z..")]
+    names(b_sup)[names(b_sup)=="a.total"] <- "b"
+    names(b_sup)[names(b_sup)=="Pr...z.."] <- "p"
+    b_sup$b <- ifelse(b_sup$p <= p_valor, b_sup$b, 0)} else {
+      b_sup <- data.frame(vble = "log(p_sup)", b=0, p=0)
+    }
   b_sup <<- b_sup
 
-  print(paste("El parámetro de la superficie es", round(b_sup$b, digits = 3), sep = " "))
+  print(paste("El parametro de la superficie es", round(b_sup$b, digits = 3), sep = " "))
 
-  b_frente <- subset(b_total, vble == "log(largo_frente)")
-  b_frente <- b_frente[,c("vble","a.total", "Pr...z..")]
-  names(b_frente)[names(b_frente)=="a.total"] <- "b"
-  names(b_frente)[names(b_frente)=="Pr...z.."] <- "p"
-  b_frente$b <- ifelse(b_frente$p <= p_valor, b_frente$b, 0)
+  if (f_frente == T) {
+    b_frente <- subset(b_total, vble == "log(largo_frente)")
+    b_frente <- b_frente[,c("vble","a.total", "Pr...z..")]
+    names(b_frente)[names(b_frente)=="a.total"] <- "b"
+    names(b_frente)[names(b_frente)=="Pr...z.."] <- "p"
+    b_frente$b <- ifelse(b_frente$p <= p_valor, b_frente$b, 0)} else{
+      b_frente <- data.frame(vble = "log(largo_frente)", b=0, p=0)
+    }
   b_frente <<- b_frente
 
-  print(paste("El parámetro del frente es", round(b_frente$b, digits = 3), sep = " "))
+  print(paste("El parametro del frente es", round(b_frente$b, digits = 3), sep = " "))
 
   b_sig <- subset(b_total, vble == "forma1"  | vble == "ubicacion_cuadra1" |vble == "ubicacion_cuadra2" |
                     vble == "ubicacion_cuadra3"| vble == "p_tipodevalor1"| vble == "p_sj1" )
@@ -349,22 +347,22 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
   b_sig <<- b_sig
 
-  print(paste("El parámetro de la forma es",
+  print(paste("El parametro de la forma es",
               ifelse (is.na(vlookup("forma1", b_sig, 2)) == T, "no existente",
                       round (vlookup("forma1", b_sig, 2), digits = 2)), sep = " "))
-  print(paste("El parámetro de la esquina es",
+  print(paste("El parametro de la esquina es",
               ifelse (is.na(vlookup("ubicacion_cuadra1", b_sig, 2)) == T, "no existente",
                       round (vlookup("ubicacion_cuadra1", b_sig, 2), digits = 2)), sep = " "))
-  print(paste("El parámetro de ubicación en la cuadra interna es",
+  print(paste("El parametro de ubicacion en la cuadra interna es",
               ifelse (is.na(vlookup("ubicacion_cuadra2", b_sig, 2)) == T, "no existente",
                       round (vlookup("ubicacion_cuadra2", b_sig, 2), digits = 2)), sep = " "))
-  print(paste("El parámetro de ubicación en la cuadra con salida a dos calles es",
+  print(paste("El parametro de ubicacion en la cuadra con salida a dos calles es",
               ifelse (is.na(vlookup("ubicacion_cuadra3", b_sig, 2)) == T, "no existente",
                       round (vlookup("ubicacion_cuadra3", b_sig, 2), digits = 2)), sep = " "))
-  print(paste("El parámetro del tipo de valor es",
+  print(paste("El parametro del tipo de valor es",
               ifelse (is.na(vlookup("p_tipodevalor1", b_sig, 2)) == T, "no existente",
                       round (vlookup("p_tipodevalor1", b_sig, 2), digits = 2)), sep = " "))
-  print(paste("El parámetro de la situación jurídica es",
+  print(paste("El parametro de la situacion juridica es",
               ifelse (is.na(vlookup("p_sj1", b_sig, 2)) == T, "no existente",
                       round (vlookup("p_sj1", b_sig, 2), digits = 2)), sep = " "))
 
@@ -378,58 +376,108 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   if (mean(cero$V1, na.rm = T) == 0 | is.nan(mean(cero$V1, na.rm = T))==T){
     stop(print("LAS VARIABLES NECESARIAS PARA LA FUNCION DE HOMOGENEIZACION SON NO SIGNIFICATIVAS"))}
 
-  else {
+  if (is.na(cero_sup) == F) {
+    if (cero_sup > 0) stop(print("VARIABLE SUPERFICIE NO TIENE EL SIGNO ESPERADO"))}
 
-    if (is.na(cero_sup) == F) {
-      if (cero_sup > 0) stop(print("VARIABLE SUPERFICIE NO TIENE EL SIGNO ESPERADO"))}
+  if (is.na(cero_frente) == F) {
+    if (cero_frente < 0)  stop(print("VARIABLE LARGO DE FRENTE NO TIENE EL SIGNO ESPERADO"))}
 
-    else {
+  if (is.na (cero_sig) == F &
+      is.na(vlookup("forma1", b_sig, 2)) == F &
+      vlookup("forma1", b_sig, 2) > 0) {
+    print("VARIABLE FORMA NO TIENE EL SIGNO ESPERADO")}
 
-      if (is.na(cero_frente) == F) {
-        if (cero_frente < 0) stop( print("VARIABLE LARGO DE FRENTE NO TIENE EL SIGNO ESPERADO"))}
-
-      else{
-
-        if (is.na (cero_sig) == F) {
-
-          if (is.na(vlookup("forma1", b_sig, 2) == F) &
-              vlookup("forma1", b_sig, 2) > 0) {
-            stop( print("VARIABLE FORMA NO TIENE EL SIGNO ESPERADO"))}
+  if (is.na (cero_sig) == F &
+      is.na(vlookup("ubicacion_cuadra1", b_sig, 2)) == F &
+      vlookup("ubicacion_cuadra1", b_sig, 2) < 0) {
+    print("VARIABLE ESQUINA NO TIENE EL SIGNO ESPERADO")}
 
 
-          if (is.na(vlookup("ubicacion_cuadra1", b_sig, 2) == F) &
-              vlookup("ubicacion_cuadra1", b_sig, 2) < 0) {
-            stop( print ("VARIABLE ESQUINA NO TIENE EL SIGNO ESPERADO"))}
+  if (is.na (cero_sig) == F &
+      is.na(vlookup("ubicacion_cuadra2", b_sig, 2)) == F &
+      vlookup("ubicacion_cuadra2", b_sig, 2) > 0) {
+    print("VARIABLE INTERNO NO TIENE EL SIGNO ESPERADO")}
 
 
-          if (is.na(vlookup("ubicacion_cuadra2", b_sig, 2) == F) &
-              vlookup("ubicacion_cuadra2", b_sig, 2) > 0) {
-            stop( print ("VARIABLE INTERNO NO TIENE EL SIGNO ESPERADO"))}
+  if (is.na (cero_sig) == F &
+      is.na(vlookup("p_tipodevalor1", b_sig, 2)) == F &
+      vlookup("p_tipodevalor1", b_sig, 2) < 0) {
+    print("VARIABLE TIPO DE VALOR NO TIENE EL SIGNO ESPERADO")}
 
 
-          if (is.na(vlookup("p_tipodevalor1", b_sig, 2) == F) &
-              vlookup("p_tipodevalor1", b_sig, 2) < 0) {
-            stop( print ("VARIABLE TIPO DE VALOR NO TIENE EL SIGNO ESPERADO"))}
+  if (is.na (cero_sig) == F &
+      is.na(vlookup("p_sj1", b_sig, 2)) == F &
+      vlookup("p_sj1", b_sig, 2) > 0) {
+    print("VARIABLE SITUACION JURIDICA NO TIENE EL SIGNO ESPERADO")}
 
 
-          if (is.na(vlookup("p_sj1", b_sig, 2) == F) &
-              vlookup("p_sj1", b_sig, 2) > 0) {
-            stop( print ("VARIABLE SITUACION JURIDICA NO TIENE EL SIGNO ESPERADO"))}
+
+  dir.create("Coeficientes")
+
+  save(b_sup, file = "Coeficientes/b_sup.Rda")
+  save(b_frente, file = "Coeficientes/b_frente.Rda")
+  save(b_sig, file = "Coeficientes/b_sig.Rda")
 
 
-        }}}}
+}
 
-  print("Seguimos procesando pero vamos bien")
 
-  dir.create("Coefcientes")
+func_homog <- function (data, b_sup, b_frente, b_sig, cambiar_forma, cambiar_esquina,
+                        cambiar_interno, parcelario, coef_parcelas,name_sup, name_frente,
+                        name_forma, name_ubicacion_cuadra){
 
-  save(b_sup, file = "Coefcientes/b_sup.Rda")
-  save(b_frente, file = "Coefcientes/b_frente.Rda")
-  save(b_sig, file = "Coefcientes/b_sig.Rda")
+  datos <<- data
+  parcelas <<- parcelario
+
+  if (f_sup == T){names(parcelas)[names(parcelas) == name_sup] <<- "p_sup"}
+  if (f_frente == T) {names(parcelas)[names(parcelas) == name_frente] <<- "largo_frente"}
+  if (coef_parcelas == T) {names(parcelas)[names(parcelas) == name_forma] <<- "forma"}
+  if (coef_parcelas == T) {names(parcelas)[names(parcelas) == name_ubicacion_cuadra] <<- "ubicacion_cuadra"}
+
+
+  if(cambiar_forma == TRUE){
+    b_sig$b <- ifelse(b_sig$vble == "forma1", -0.2,b_sig$b)
+    b_sig <<- b_sig
+  }
+
+  if(cambiar_esquina == TRUE){
+    b_sig$b <- ifelse(b_sig$vble == "ubicacion_cuadra1", 0.1,b_sig$b)
+    b_sig <<- b_sig
+  }
+
+  if(cambiar_forma == TRUE){
+    b_sig$b <- ifelse(b_sig$vble == "ubicacion_cuadra2", -0.25 ,b_sig$b)
+    b_sig <<- b_sig
+  }
+
+  save(b_sig, file = "Coeficientes/b_sig.Rda")
+
+  print(paste("El parametro de la superficie es", round(b_sup$b, digits = 3), sep = " "))
+
+  print(paste("El parametro del ancho de frente es", round(b_frente$b, digits = 3), sep = " "))
+
+  print(paste("El parametro de la forma es",
+              ifelse (is.na(vlookup("forma1", b_sig, 2)) == T, "no existente",
+                      round (vlookup("forma1", b_sig, 2), digits = 2)), sep = " "))
+  print(paste("El parametro de la esquina es",
+              ifelse (is.na(vlookup("ubicacion_cuadra1", b_sig, 2)) == T, "no existente",
+                      round (vlookup("ubicacion_cuadra1", b_sig, 2), digits = 2)), sep = " "))
+  print(paste("El parametro de ubicacion en la cuadra interna es",
+              ifelse (is.na(vlookup("ubicacion_cuadra2", b_sig, 2)) == T, "no existente",
+                      round (vlookup("ubicacion_cuadra2", b_sig, 2), digits = 2)), sep = " "))
+  print(paste("El parametro de ubicacion en la cuadra con salida a dos calles es",
+              ifelse (is.na(vlookup("ubicacion_cuadra3", b_sig, 2)) == T, "no existente",
+                      round (vlookup("ubicacion_cuadra3", b_sig, 2), digits = 2)), sep = " "))
+  print(paste("El parametro del tipo de valor es",
+              ifelse (is.na(vlookup("p_tipodevalor1", b_sig, 2)) == T, "no existente",
+                      round (vlookup("p_tipodevalor1", b_sig, 2), digits = 2)), sep = " "))
+  print(paste("El parametro de la situacion juridica es",
+              ifelse (is.na(vlookup("p_sj1", b_sig, 2)) == T, "no existente",
+                      round (vlookup("p_sj1", b_sig, 2), digits = 2)), sep = " "))
+
 
   beta <- as.matrix(b_sig[,c("b")])
   matriz_beta <<- beta
-
 
   vbles <- data.frame(id = as.numeric(1:(dim(datos)[1])))
   if (is.na(vlookup("forma1", b_sig, 2))==F) {
@@ -461,10 +509,10 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
 
   mediana_sup <<- round(median(parcelas$p_sup))
-  save(mediana_sup, file = "Coefcientes/mediana_sup.Rda")
+  save(mediana_sup, file = "Coeficientes/mediana_sup.Rda")
 
   mediana_frente <<- round(median(parcelas$largo_frente))
-  save(mediana_frente, file = "Coefcientes/mediana_frente.Rda")
+  save(mediana_frente, file = "Coeficientes/mediana_frente.Rda")
 
 
   datos$coef <- ((datos$p_sup/mediana_sup) ^ ifelse(length(b_sup$b)!=0, b_sup$b, 0)) *
@@ -489,10 +537,21 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
   library(stringr)
   form_coef <- c(paste("Para parcelas pasillo -> coef = 0.2"),
                  paste(
-                   "Caso contrario -> coef = (sup/", mediana_sup, ")^", b_sup$b,
-                   " * (frente/", mediana_frente , ")^" , b_frente$b,
-                   " * exp(forma*" , b_sig[1,2], " + esquina*" , b_sig[2,2],
-                   " + interno*" , b_sig[3,2], " + salida_calles*" , b_sig[4,2], ")",
+                   "Caso contrario -> coef = (sup/", mediana_sup, ")^(", b_sup$b,
+                   ") * (frente/", mediana_frente , ")^ (" , b_frente$b,
+                   ") * exp(forma*(" ,
+                   if (is.na(vlookup("forma1", b_sig, 2)) == T) {0} else {
+                     vlookup("forma1", b_sig, 2)},
+                   ") + esquina*(" ,
+                   if (is.na(vlookup("ubicacion_cuadra1", b_sig, 2)) == T) {0} else {
+                     vlookup("ubicacion_cuadra1", b_sig, 2)},
+                   ") + interno*(" ,
+                   if (is.na(vlookup("ubicacion_cuadra2", b_sig, 2)) == T) {0} else {
+                     vlookup("ubicacion_cuadra2", b_sig, 2)},
+                   ") + salida_calles*(" ,
+                   if (is.na(vlookup("ubicacion_cuadra3", b_sig, 2)) == T) {0} else {
+                     vlookup("ubicacion_cuadra3", b_sig, 2)},
+                   ") )",
                    sep=""),
                  paste("Esto aplica para las siguientes localidades:"),
                  paste(list(levels(as.factor(datos$localidad)))[[1]]
@@ -500,17 +559,17 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
 
   form_coef <<- form_coef
 
-  save(form_coef, file="Coefcientes/form_coef.Rda")
-  write.table(form_coef, file="Coefcientes/form_coef.txt")
+  save(form_coef, file="Coeficientes/form_coef.Rda")
+  write.table(form_coef, file="Coeficientes/form_coef.txt")
 
 
-  save(datos, file = "Coefcientes/datos_coef.Rda")
+  save(datos, file = "Coeficientes/datos_coef.Rda")
 
   resultados_muestra <- list("RESUMEN DE COEFICIENTES EN LA MUESTRA",coeficientes_muestra, "RESUMEN DE VALORES HOMOGENEIZADOS",vh)
 
   if (coef_parcelas == FALSE){
 
-    print("No se calculan los coeficientes de homogeneización en las parcelas")
+    print("No se calculan los coeficientes de homogeneizacion en las parcelas")
 
     return(resultados_muestra)
 
@@ -564,7 +623,7 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
     parcelas$coef <<- parcelas$coef
 
 
-    save(parcelas, file = "Coefcientes/parcelas_coef.Rda")
+    save(parcelas, file = "Coeficientes/parcelas_coef.Rda")
 
     coeficientes_parcelas <- summary(parcelas$coef)
 
@@ -575,7 +634,6 @@ func_homog <- function (data, name_sup, name_frente, name_forma, name_ubicacion_
     return(resultados)
 
   }}
-
 
 control_omi <- function(datos, base_tc, umbral, dist_lw,  fecha_desde, fecha_hasta){
 
