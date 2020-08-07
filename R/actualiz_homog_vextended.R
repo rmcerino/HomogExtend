@@ -429,10 +429,10 @@ func_homog <- function (data, b_sup, b_frente, b_sig, cambiar_forma, cambiar_esq
   datos <<- data
   parcelas <<- parcelario
 
-  if (f_sup == T){names(parcelas)[names(parcelas) == name_sup] <<- "p_sup"}
-  if (f_frente == T) {names(parcelas)[names(parcelas) == name_frente] <<- "largo_frente"}
-  if (coef_parcelas == T) {names(parcelas)[names(parcelas) == name_forma] <<- "forma"}
-  if (coef_parcelas == T) {names(parcelas)[names(parcelas) == name_ubicacion_cuadra] <<- "ubicacion_cuadra"}
+  names(parcelas)[names(parcelas) == name_sup] <<- "p_sup"
+  names(parcelas)[names(parcelas) == name_frente] <<- "largo_frente"
+  names(parcelas)[names(parcelas) == name_forma] <<- "forma"
+  names(parcelas)[names(parcelas) == name_ubicacion_cuadra] <<- "ubicacion_cuadra"
 
 
   if(cambiar_forma == TRUE){
