@@ -2,29 +2,29 @@
 \alias{valor_actualizado}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Actualización de valores muestrales a un determinado valor de tipo de cambio.
+Actualizacion de valores muestrales a un determinado valor de tipo de cambio.
 }
 \description{
 Paso 2 de 4:
 
-Con las elasticidades y la base de datos obtenidas en el paso 1, se procede a la actualización de valores muestrales a un determinado valor de tipo de cambio.
+Con las elasticidades y la base de datos obtenidas en el paso 1, se procede a la actualizacion de valores muestrales a un determinado valor de tipo de cambio.
 }
 \usage{
 valor_actualizado(tc_act, datos, elasticidad)
 }
 \arguments{
   \item{tc_act}{Valor de tipo de cambio al cual se desea actualizar}
-  \item{datos}{Base de datos muestral obtenida de la función "elasticidades", es importante que tenga definidos los cuantiles de cada observación}
-  \item{elasticidad}{Data frame obtenido de la función "elasticidades", la cual posee las elasticidades por cada cuantil}
+  \item{datos}{Base de datos muestral obtenida de la funcion "elasticidades", es importante que tenga definidos los cuantiles de cada observacion}
+  \item{elasticidad}{Data frame obtenido de la funcion "elasticidades", la cual posee las elasticidades por cada cuantil}
 
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-La función arroja la base de datos con dos nuevas variables:
+La funcion arroja la base de datos con dos nuevas variables:
 
-elasticidad = Elasticidad de tipo de cambio en cada observación
+elasticidad = Elasticidad de tipo de cambio en cada observacion
 
 valor_actualizado = Es el valor en pesos por metro cuadrado llevado al tipo de cambio de referencia
 
