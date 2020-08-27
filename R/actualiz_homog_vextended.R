@@ -445,7 +445,7 @@ func_homog <- function (data, b_sup, b_frente, b_sig, cambiar_forma, cambiar_esq
     b_sig <<- b_sig
   }
 
-  if(cambiar_forma == TRUE){
+  if(cambiar_interno == TRUE){
     b_sig$b <- ifelse(b_sig$vble == "ubicacion_cuadra2", -0.25 ,b_sig$b)
     b_sig <<- b_sig
   }
